@@ -1,0 +1,194 @@
+---
+title: "Bellabeat Case Study"
+author: "Amarnath"
+date: "2024-02-05"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos = c(CRAN = "https://archive.linux.duke.edu/cran/"))
+require(knitr)
+opts_chunk$set(fig.align='center') 
+```
+
+### Business Objective. 
+
+*Analyze smart device usage data to gain insight into how consumers use non-Bellabeat smart devices.     
+*Select one Bellabeat product to apply these insights and provide recommendations to the marketing team.    
+
+### Preparing the Data. 
+
+
+*FitBit Fitness Tracker Data: Minute-level details from 30 users on physical activity, heart rate, and sleep. Valuable for health and lifestyle insights. CC0: Public Domain, made available through Mobius. 
+
+*Lets use R for Data Analysis Process. 
+
+#### Loading Necessary Packages. 
+
+
+```{r Load Necessary Packages, echo=TRUE, message=FALSE, warning=FALSE}
+install.packages("tidyverse")
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("ggpubr")
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+ 
+#### Loading Dataset. 
+
+
+```{r Loading Data, echo=TRUE, message=FALSE, warning=FALSE}
+DailyActivity <- read.csv("/Users/amarnathreddychinthapalli/Desktop/Bellabeat - casestudy/Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+
+DailySleep <- read.csv("/Users/amarnathreddychinthapalli/Desktop/Bellabeat - casestudy/Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+```
+
+#### Structure of Data Frames. 
+
+
+```{r}
+str(DailyActivity)
+str(DailySleep)
+```
+
+### Data Cleaning. 
+
+
+*We have noticed that Dates in all data frames is in Character type, lets change it to Date type in the format of "YYYY-MM-DD". 
+```{r}
+DailyActivity$ActivityDate <- as.Date(DailyActivity$ActivityDate, format = "%m/%d/%Y")
+DailySleep$SleepDay <- as.Date(DailySleep$SleepDay, format = "%m/%d/%Y")
+```
+
+*Lets see the preiew of the data frames. 
+```{r}
+head(DailyActivity)
+```
+
+```{r}
+head(DailySleep)
+```
+
+### Data Manipulation. 
+
+*Lets create a dataframe with users activity who have burned more than 2000 calories.  
+```{r}
+filtered_df = DailyActivity %>%
+  filter(DailyActivity$Calories > 2000)
+```
+
+*Lets Merge DailyActivity and DailySleep Data frames to find out if there is any correlation between calories burnt and sleep time.  
+
+*First, lets change activitydate and sleepday column names to same name 'Date'.    
+```{r}
+colnames(DailyActivity)[colnames(DailyActivity) == "ActivityDate"] <- "Date"
+colnames(DailySleep)[colnames(DailySleep) == "SleepDay"] <- "Date"
+```
+
+*Lets merge only the required columns into a new dataframe. 
+```{r}
+sub_DailyActivity <- select(DailyActivity, Id, Date, Calories, TotalSteps)
+sub_DailySleep <- select(DailySleep, Id, Date, TotalMinutesAsleep)
+Activity_Sleep <- merge(sub_DailyActivity, sub_DailySleep, by = c("Id","Date"))
+```
+
+*Lets create a dataframe to analyse the perfomance of user daily with respect to weekdays. 
+```{r}
+WeekdaysPerformance <- Activity_Sleep %>%
+  mutate(Weekday = factor(weekdays(Date), levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")))
+```
+
+```{r}
+str(Activity_Sleep)
+summary(Activity_Sleep[,c("TotalSteps", "TotalMinutesAsleep", "Calories")])
+str(WeekdaysPerformance)
+```
+
+### Data Analysis and Visualization. 
+
+#### Analysing impact of Active Minutes on Calories. 
+```{r}
+library(ggplot2)
+ggplot(data = DailyActivity)+
+geom_point(mapping = aes(x = Calories, y = VeryActiveMinutes))+
+labs(title = "Calories Burnt vs Very Active Minutes")
+```
+
+*Users who are burning more than 2000 calories have more very active minutes.  
+
+
+*Lets explore this further and see how Very Active Minutes have an impact on users who burn more than 3000 calories.  
+```{r}
+library(ggplot2)
+library(ggpubr)
+ggplot(data = filtered_df, aes(x = Calories, y = VeryActiveMinutes)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  stat_cor(label.x = 4000)+
+  labs(title = "Calories Burnt vs Very Active Minutes")
+```
+
+*As we can see there is a strong correlation between VeryAciveMinutes and Calories(>2000). 
+
+#### Analysing impact of steps taken in a day on Calories. 
+```{r}
+ggplot(DailyActivity)+
+  geom_point(mapping = aes(x=Calories, y=TotalSteps))+
+  labs(title = "Calories Burnt vs TotalSteps")
+```
+*Lets explore this further. 
+```{r}
+ggplot(filtered_df,  aes(x=Calories, y=TotalSteps))+
+  geom_point()+
+  geom_smooth(method ="lm", se=FALSE)+
+  stat_cor(label.x = 4000)+
+  labs(title = "Calories Burnt vs TotalSteps")
+```
+
+*As expected there is a moderate correlation between totalsteps taken and Calories(>2000)
+
+#### Analysing impact of sleep on Calories. 
+```{r}
+ggplot(Activity_Sleep, aes(x=TotalMinutesAsleep, y = Calories)) +
+  geom_point()+
+  labs(title = "Calories Burnt vs Sleep")
+
+```
+```{r}
+ggplot(Activity_Sleep, aes(x = Calories, y = TotalMinutesAsleep)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Calories Burnt Over Sleep")
+```
+
+*Users typically burning more calories tend to sleep between 325 and 550 minutes.  
+
+#### Analysing the user's performance on a weekday basis. 
+
+```{r}
+ggplot(WeekdaysPerformance, aes(x=Weekday, y=Calories))+
+  geom_bar(stat = "identity", fill="lightblue")+
+  labs(title = "Calorie Burn vs Weekdays")
+  
+```
+
+```{r}
+ggplot(WeekdaysPerformance, aes(x=Weekday, y=TotalSteps))+
+  geom_bar(stat = "identity", fill="lightblue")+
+  labs(title = "Total Steps vs Weekdays")
+```
+
+*After examining both graphs, we observe that users tend to burn fewer calories and take fewer steps on Mondays, Fridays, and Sundays. This pattern could be attributed to the beginning and end of the week.  
+
+### Recommendations to the Marketing Team. 
+
+*If a user aims to increase calorie burn, maintaining more active minutes exceeding 50 and total steps surpassing 8000 is highly beneficial. Therefore, we could advise the marketing team to set calorie burn goals and support users by sending targeted notifications.  
+
+*Individuals typically burning more calories tend to sleep between 325 and 550 minutes. Hence, we could suggest the marketing team send notifications regarding sleep duration to encourage calorie expenditure.  
+
+*Users exhibit lower calorie expenditure and step counts on Mondays, Fridays, and Sundays, potentially due to the start and end of the week. Consequently, we suggest the marketing team consider sending motivational messages and challenges to encourage activity during these days.  
+
+
