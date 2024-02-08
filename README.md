@@ -1,7 +1,11 @@
 # Bellabeat-Case-Study
-Analyze smart device usage data to gain insight into how consumers use non-Bellabeat smart devices. Select one Bellabeat product to apply these insights and provide recommendations to the marketing team.
+This project delves into the analysis of smart device usage data to uncover patterns in non-Bellabeat smart device usage. The aim is to select a Bellabeat product and leverage these insights to provide recommendations to the marketing team.
 
-This is Data Analysis Project using R.
+This project involves data analysis using R.
 
-*Dataset Used*
-FitBit Fitness Tracker Data: Minute-level details from 30 users on physical activity, heart rate, and sleep.Valuable for health and lifestyle insights. CC0: Public Domain, made available through Mobius.
+## Dataset Used
+The dataset comprises minute-level details from 30 users concerning physical activity, heart rate, and sleep obtained from Fitbit Fitness Trackers. This dataset is particularly valuable for deriving insights related to health and lifestyle. It is provided under the CC0 license and can be accessed via Mobius.
+
+Link to the dataset - https://www.kaggle.com/datasets/arashnic/fitbit?resource=download
+
+I have attached both the R Markdown (RMD) file and its corresponding PDF for reference.
